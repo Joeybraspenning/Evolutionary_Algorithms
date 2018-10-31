@@ -10,15 +10,24 @@ function [ opt, fopt ] = s1530194_s1508768_ga(eval_budget)
 %    pm = 2/n;    
 %    evalcount = 0;
 % with switch positions:[21,16,2,18,1,8,10,10,9,1,2,18,12,1,17]
+%
+%
+%With offspring size 4*mu we find a minimum powerloss of 661.0084
+%   n=15;
+%   mu = 5;
+%   pc = 1/mu;
+%   pm = 2/n
+%with switch positions: [21,16,2,18,1,2,10,10,5,1,2,18,1,1,17]
+
 
 
     bounds = load('para119.mat');    
     n=15;
- 	mu = 20;
+ 	mu = 7;
     pc = 1/mu;
-    pm = 6/n;    
+    pm = 2/n;    
     evalcount = 0;
-    
+    offspring_ratio = 4;
     
     % Initialize population
     for i = 1:mu
@@ -38,16 +47,15 @@ function [ opt, fopt ] = s1530194_s1508768_ga(eval_budget)
   while evalcount < eval_budget
     [p, idx] = select_tournament(P, f);
     % Generate new population (recombination, mutation)
-    for i = 1:mu
+    for i = 1:offspring_ratio*mu
       %fprintf('In while %d forloop %d \n', evalcount, i)
       
       %adjust cross-over when a local minimum is reached
       
-      %if evalcount == 2000
-      %    pc = pc*2;
-      %    pm = pm*1.5;
+      %if evalcount == 3000
+      %    pm = pm/2;
       %end
-      %if evalcount > 2000
+      %if evalcount > 5000
       %    p(:, floor(mu/4):floor(mu/2)) = p(:, floor(3*mu/4):mu);
       %end
       
@@ -60,17 +68,20 @@ function [ opt, fopt ] = s1530194_s1508768_ga(eval_budget)
         while flag==0
             j = j + 1;
             crossloc = randi(n-1,1,1);
+            %if evalcount < 5000
             index = randi([1,floor(mu/2)], [1,2]);
+            %else
+            %    index = randi([1,mu], [1,2]);
+            %end
             Pnew(:,i) = [p(1:crossloc, index(1));p(crossloc:n-1,index(2))]; % crossover
             flag = valid_119(Pnew(:,i));
             if j > 1000
-                %disp('No proper crossover found')
                 Pnew(:,i) = p(:,index(1));
                 break
             end
         end
       else
-        Pnew(:,i) = p(:,i); % copy
+        Pnew(:,i) = p(:,ceil(i/offspring_ratio)); % copy
       end
       
       %attempt mutation until a valid solution is found
@@ -87,7 +98,7 @@ function [ opt, fopt ] = s1530194_s1508768_ga(eval_budget)
     end
 
     % Decode and evaluate
-    for i = 1:mu
+    for i = 1:offspring_ratio*mu
       %g(:,i) = feval(decodefct, P(:,i));
       f_new(i) = calculation_119(Pnew_new(:,i));
     end    
@@ -104,12 +115,12 @@ function [ opt, fopt ] = s1530194_s1508768_ga(eval_budget)
     % Statistics administration
     [fopt, optindex] = min(f);
     opt = P(:,optindex);
-    for i = 1:mu
+    for i = 1:offspring_ratio*mu
       evalcount = evalcount + 1;
       histf(evalcount) = fopt;
     end
     
-    fprintf('Best result: %10.4f kW\n', fopt)
+    %fprintf('Best result: %10.4f kW\n', fopt)
 
     % Plot statistics
     clf
@@ -122,7 +133,7 @@ function [ opt, fopt ] = s1530194_s1508768_ga(eval_budget)
     
     %best result from literature: 869.7271 kW
   end
-  %fprintf('Best result: %10.4f kW\n', fopt)
+  fprintf('Best result: %10.4f kW\n', fopt)
 end
 
 
