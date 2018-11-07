@@ -1,4 +1,4 @@
-function [ opt, fopt ] = s1530194_s1508768_ga(eval_budget)
+function [ opt, F_min, F ] = s1530194_s1508768_ga(eval_budget)
 % Calculates optimal power grid lay-out
 %   Detailed explanation goes here
 
@@ -28,7 +28,7 @@ function [ opt, fopt ] = s1530194_s1508768_ga(eval_budget)
     pm = 2/n;    
     evalcount = 0;
     offspring_ratio = 4;
-    
+    F = [];
     % Initialize population
     for i = 1:mu
         aopt = random_bounds(n,bounds);
@@ -41,8 +41,9 @@ function [ opt, fopt ] = s1530194_s1508768_ga(eval_budget)
         end
         P(:,i) = aopt;
         f(i) = calculation_119(P(:,i));
+        evalcount = evalcount + 1;
     end
-    
+    F = [F; min(f)];
       % Evolution loop
   while evalcount < eval_budget
     [p, idx] = select_tournament(P, f);
@@ -69,7 +70,7 @@ function [ opt, fopt ] = s1530194_s1508768_ga(eval_budget)
             j = j + 1;
             crossloc = randi(n-1,1,1);
             %if evalcount < 5000
-            index = randi([1,floor(mu/2)], [1,2]);
+            index = randi([1,floor(mu/1)], [1,2]);
             %else
             %    index = randi([1,mu], [1,2]);
             %end
@@ -105,22 +106,40 @@ function [ opt, fopt ] = s1530194_s1508768_ga(eval_budget)
     
     % Replace old population by new population, by choosing
     %the best individuals from both populations combined (comb)
+   
+   
     f_comb = [f,f_new];
     P_comb = [P,Pnew_new];
     [p_comb, idx] = select_tournament(P_comb, f_comb);
+    tell = 0;
+    if evalcount > 2000
+        for i = 1:mu
+            if ismember(P, p_comb(:,i))
+                tell = tell + 1;
+            end
+        end
+        if tell > ceil(mu/2)
+            [p_best_new, idx] = select_tournament(Pnew_new, f_new);
+            p_comb(:, ceil(mu/2)+1:mu) = p_best_new(:,1:floor(mu/2));
+        end
+    end    
     P = p_comb(:,1:mu);
     f = f_comb(idx(1:mu));
     
     
     % Statistics administration
     [fopt, optindex] = min(f);
+    F = [F; fopt];
     opt = P(:,optindex);
     for i = 1:offspring_ratio*mu
       evalcount = evalcount + 1;
       histf(evalcount) = fopt;
+      if evalcount > 2000
+        histt(evalcount) = tell;
+      end
     end
     
-    %fprintf('Best result: %10.4f kW\n', fopt)
+    fprintf('Best result: %10.4f kW\n', fopt)
 
     % Plot statistics
     clf
@@ -128,12 +147,13 @@ function [ opt, fopt ] = s1530194_s1508768_ga(eval_budget)
     semilogy(histf(1:evalcount))
     subplot(2,1,2)
     bar([1:n],opt)
-    xlim([1 n])
+    xlim([1 n])     
     drawnow()
     
     %best result from literature: 869.7271 kW
   end
-  fprintf('Best result: %10.4f kW\n', fopt)
+  fprintf('Best result: %10.4f kW\n', min(F))
+  F_min = min(F)
 end
 
 
