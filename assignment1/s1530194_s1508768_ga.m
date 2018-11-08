@@ -1,4 +1,4 @@
-function [ opt, fopt] = s1530194_s1508768_ga(eval_budget)
+function [opt, fopt] = s1530194_s1508768_ga(eval_budget)
 % Calculates optimal power grid lay-out
 %{
 This function applies a genetic (7+28) algorithm to find the power grid lay out with the lowest power loss
@@ -12,12 +12,10 @@ offspring_ratio = number of children for each parent. Children population is of 
 pc = cross-over probability
 pm = mutation probability
 %}
-  tic
-
 %Define parameters
   bounds = load('para119.mat');    
   n=15;
- 	mu = 7;
+  mu = 7;
   offspring_ratio = 4;
   pc = 1/mu;
   pm = 2/n;    
@@ -28,7 +26,6 @@ pm = mutation probability
 
       % Evolution loop
   while evalcount < eval_budget
-          
   [Pnew] = cross_over(pc, n, mu, P, offspring_ratio);
   [Pnew_new] = mutate(pm, n, Pnew, bounds, mu, offspring_ratio);
   [P, f] = selection(Pnew_new, P, mu, offspring_ratio, f, evalcount);
@@ -39,7 +36,6 @@ pm = mutation probability
   [F_min, F_idx] = min(F);
   fopt = F_min;
   opt = OP(:, F_idx);
-  toc
 end
 
 
@@ -69,7 +65,7 @@ function [F, P, f, evalcount, OP] = initialize(mu, n, bounds, evalcount,  F)
     end
     [f_min, f_idx] = min(f);
     F = [F; f_min];
-    OP = [OP, P(:,f_idx)]
+    OP = [OP, P(:,f_idx)];
 end
 
 function [Pnew] = cross_over(pc, n, mu, p, offspring_ratio)
@@ -93,11 +89,11 @@ function [Pnew] = cross_over(pc, n, mu, p, offspring_ratio)
             Pnew(:,i) = [p(1:crossloc, index(1));p(crossloc:n-1,index(2))]; % crossover
             
             flag = valid_119(Pnew(:,i));
-            if j > 1000
+            if j > 100000
                 Pnew(:,i) = p(:,index(1));
                 break
             end
-            
+            %}
         end
       else
         %If cross-over does not occur the relevant individual is copied
@@ -214,4 +210,5 @@ function a = mutate_in_bounds(P, mutloc, bounds)
     end
     a = a.';
 end
+
 
