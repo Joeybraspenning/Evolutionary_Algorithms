@@ -24,7 +24,7 @@ def load_MC():
 	return data
 
 def load_GA():
-	filename = 'Fitness_ga.csv'
+	filename = 'Fitness_ga_2.csv'
 
 	data = []
 	with open(filename, 'r') as f:
@@ -41,6 +41,11 @@ def process_data(data):
 
 	x_data = np.arange(1, data.shape[1]+1)
 
+	#print statistics
+	best_results = np.min(data, axis = 1)
+	print(f'Mean: {np.mean(best_results)}')
+	print(f'STD: {np.std(best_results)}')
+
 	return mean_progression, std_progression, x_data, data
 
 def plot_MC(mean_progression, std_progression, x_data):
@@ -53,7 +58,7 @@ def plot_MC(mean_progression, std_progression, x_data):
 
 	plt.xlabel('Number of evaluations')
 	plt.ylabel('Power loss [kW]')
-	plt.title(r'Average progession of Monte Carlo optimizer with 1$\sigma$ error band')
+	plt.title(r'Average progression of Monte Carlo optimizer with 1$\sigma$ error band')
 
 	plt.savefig('MC_progression.png', dpi = 300, bbox_inches = 'tight')
 	plt.show()
@@ -61,6 +66,9 @@ def plot_MC(mean_progression, std_progression, x_data):
 def plot_GA(mean_progression, std_progression, generations, data):
 	#make an array indicating the number of evaluations
 	evals = np.linspace(1, 10000, len(generations))
+
+	#plot the best result from the literature
+	plt.plot([-10,generations[-1]+10], [869.7271, 869.7271], color = 'red', linewidth = 0.8)
 
 	for i in range(data.shape[0]):
 		plt.plot(generations, data[i], linewidth = 0.3, color = 'grey')
@@ -70,7 +78,7 @@ def plot_GA(mean_progression, std_progression, generations, data):
 
 	plt.xlabel('Number of generations')
 	plt.ylabel('Power loss [kW]')
-	plt.title(r'Average progession of genetic algorithm with 1$\sigma$ error band')
+	plt.title(r'Average progression of genetic algorithm with 1$\sigma$ error band')
 
 	plt.yscale('log')
 	plt.ylim((7e2, 3e3))
@@ -78,14 +86,14 @@ def plot_GA(mean_progression, std_progression, generations, data):
 
 	#add axis
 	fig = plt.gcf()
-	ax2 = fig.add_axes((0.155,0.1,0.695,0.0))
+	ax2 = fig.add_axes((0.18,0.1,0.667,0.0))
 	ax2.yaxis.set_visible(False)
 	ax2.set_xticks(np.linspace(0, 10000, 6))
 	ax2.set_xlabel('Number of evaluations')
 
 	fig.subplots_adjust(bottom=0.2)
 
-	plt.savefig('GA_progression.png', dpi = 300, bbox_inches = 'tight')
+	plt.savefig('GA_progression_mu_lambda.png', dpi = 300, bbox_inches = 'tight')
 	plt.show()
 
 # data = load_MC()
