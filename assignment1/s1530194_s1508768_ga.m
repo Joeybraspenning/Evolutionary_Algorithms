@@ -89,7 +89,7 @@ function [Pnew] = cross_over(pc, n, mu, p, offspring_ratio)
             Pnew(:,i) = [p(1:crossloc, index(1));p(crossloc:n-1,index(2))]; % crossover
             
             flag = valid_119(Pnew(:,i));
-            if j > 100000
+            if j > 10000
                 Pnew(:,i) = p(:,index(1));
                 break
             end
