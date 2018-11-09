@@ -5,6 +5,11 @@ This function applies a genetic (7+28) algorithm to find the power grid lay out 
 The population is first initalized at random
 As long as the evaluation budget is not reached, the population is crossed-over, then mutated and at last selected.
 Some statistics are done to ensure that the best individual is captured in each generation
+Input:
+eval_budget = number of times the function calculate119 may be called
+Output:
+opt = optimal grid configuration for fopt
+fopt = lowest powerloss / best fitness
 The relevant parameters are:
 n = vector length, number of loops in the power grid
 mu = parent population size
@@ -39,12 +44,18 @@ pm = mutation probability
 end
 
 
-function [F, P, f, evalcount, OP] = initialize(mu, n, bounds, evalcount,  F)
+function [F, P, f, evalcount, OP] = initialize(mu, n, bounds)
     %{
-    Intialize the population with mu valid individuals and compute their fitness
-    evalcount = number of times the function calculation_119 has been called
-    F = list with the best fitness value for each generation
+    Input:
+    global parameters mu, n, bounds
+    evalcount = number of calls to calculate119 so far
+    F = list of best fitness values for each generation
+    Output:
+    P = parent population
+    f = fitness of parent population
     OP = list with the grid layout for the best fitness value for each generation
+    
+    Intialize the population with mu valid individuals and compute their fitness
     %}
     evalcount = 0;
     F = [];
@@ -72,6 +83,12 @@ function [Pnew] = cross_over(pc, n, mu, p, offspring_ratio)
     %{
     Perform cross-over between two randomly selected individuals from the population
     Cross-over is only performed with a probability of pc 
+    
+    Input:
+    global parameters pc, n, mu, offspringratio
+    p = current population before cross ver
+    Output:
+    Pnew = population after cross over
     %}
   for i = 1:offspring_ratio*mu
       if (rand() < pc)
@@ -107,6 +124,11 @@ function [Pnew_new] = mutate(pm, n, Pnew, bounds, mu, offspring_ratio)
   Perform mutation on random location of the individual with probability pm
   If a location is selected for mutation, a random number in bounds for
    that specific location will be chosen as the new value
+  Input:
+  global parameters pm, n, mu, bounds, offspring_ratio
+  Pnew = population after cross over
+  Output:
+  Pnew_new = population after mutation
   %}
   for i = 1:offspring_ratio*mu
       %mutate individual from population until a valid solution is achieved
@@ -128,6 +150,15 @@ function [P, f] = selection(Pnew_new, P, mu, offspring_ratio, f, evalcount)
     %{
     Selects the fittest mu individuals from the combined parent + offspring population
     The selection method applied is tournament selection
+    Input:
+    global parameters u, offspring_ratio
+    evalcount = number of calls to calculate119 so far
+    P = parent population
+    Pnew_new = offspring after both cross-over and mutation
+    f = fitness of parent population
+    Output:
+    P = new parent population
+    f = fitness of new parent population
     %}
     for i = 1:offspring_ratio*mu
       f_new(i) = calculation_119(Pnew_new(:,i));
@@ -163,6 +194,17 @@ function [F, evalcount, OP] = statistics(P, f, F, offspring_ratio, mu, evalcount
     %{
     Keeps track of the best individual and grid lay out for each generation
     Updates the evalcount to reflect the newest generation
+    Input:
+    global parameters offspring_ratio, mu, n
+    P = new parent population after the function selection()
+    f = fitness of new parent population
+    F = list of best fitness values for each geneartion
+    OP = list of best grid configurations for each generation
+    evalcount = number of times the function calculate 119 is called so far
+    Output:
+    F = list of best fitness values for each geneartion, now appended with the value for the current generation
+    evalcount = number of times the function calculate 119 is called so far, updates for the current generation
+    OP = list of best grid configurations for each generation, appended with the current best configuration
     %}
     %Find best fitness for this generation
     [fopt, optindex] = min(f);
@@ -180,6 +222,10 @@ end
 function [a] = random_bounds(n,bounds)
     %Returns a random vector of length n which complies with the limits in
     %para119.mat
+    %Input:
+    %global parameters n, bounds
+    %Output:
+    %a = random vector of length n within bounds
 
     for j = 1:n
         a(j) = randi([bounds.para.lb(j), bounds.para.ub(j)]);
@@ -188,7 +234,15 @@ function [a] = random_bounds(n,bounds)
 end
 
 function [a, idx] = select_tournament(P, f)
-    %sort results by fitness and returns sorted population and the indicess that sort it
+    %{
+    sort results by fitness and returns sorted population and the indicess that sort it
+    Input:
+    P = population to be selected
+    f = fitness values of P
+    Output:
+    a = population P sorted by f
+    idx = indicess that sort P
+    %}
     [v,idx] = sort(f, 'ascend');
     a = P(:,idx);
 end
@@ -200,6 +254,12 @@ function a = mutate_in_bounds(P, mutloc, bounds)
   that location is assigned a new random number drawn at random from within the bounds
   specified in the para119.mat file for this location
   The mutated vector is returned
+  Input:
+  global parameter bounds
+  P = individual to be mutated
+  mutloc = mutation locations
+  Output:
+  a = mutated individual
   %}
     for j =  1:length(mutloc)
         if mutloc(j)==1
