@@ -33,7 +33,7 @@ pm = mutation probability
   while evalcount < eval_budget
   [Pnew] = cross_over(pc, n, mu, P, offspring_ratio);
   [Pnew_new] = mutate(pm, n, Pnew, bounds, mu, offspring_ratio);
-  [P, f] = selection(Pnew_new, P, mu, offspring_ratio, f, evalcount);
+  [P, f] = selection(Pnew_new, P, mu, offspring_ratio, f);
   [F, evalcount, OP] = statistics(P, f, F, offspring_ratio, mu, evalcount, n, OP);
     
   end
@@ -146,13 +146,12 @@ function [Pnew_new] = mutate(pm, n, Pnew, bounds, mu, offspring_ratio)
     end
 end
 
-function [P, f] = selection(Pnew_new, P, mu, offspring_ratio, f, evalcount)
+function [P, f] = selection(Pnew_new, P, mu, offspring_ratio, f)
     %{
     Selects the fittest mu individuals from the combined parent + offspring population
     The selection method applied is tournament selection
     Input:
     global parameters u, offspring_ratio
-    evalcount = number of calls to calculate119 so far
     P = parent population
     Pnew_new = offspring after both cross-over and mutation
     f = fitness of parent population
@@ -169,21 +168,6 @@ function [P, f] = selection(Pnew_new, P, mu, offspring_ratio, f, evalcount)
     P_comb = [P,Pnew_new];
     %Sort the parent and offspring populations 
     [p_comb, idx] = select_tournament(P_comb, f_comb);
-    
-    %{
-    tell = 0;
-    if evalcount > 2000
-        for i = 1:mu
-            if ismember(P, p_comb(:,i))
-                tell = tell + 1;
-            end
-        end
-        if tell > ceil(mu/2)
-            [p_best_new, idx] = select_tournament(Pnew_new, f_new);
-            p_comb(:, ceil(mu/2)+1:mu) = p_best_new(:,1:floor(mu/2));
-        end
-    end    
-    %}
     
     %Pick the best mu individuals from the combined population
     P = p_comb(:,1:mu);
