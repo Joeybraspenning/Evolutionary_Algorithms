@@ -48,7 +48,10 @@ def process_data(data):
 
 	return mean_progression, std_progression, x_data, data
 
-def plot_MC(mean_progression, std_progression, x_data):
+def plot_MC(mean_progression, std_progression, x_data, data):
+	# for i in range(data.shape[0]):
+	# 	plt.plot(x_data, data[i], linewidth = 0.3, color = 'grey')
+
 	plt.plot(x_data, mean_progression)
 	plt.fill_between(x_data, mean_progression + std_progression, mean_progression - std_progression, alpha = 0.3)
 
@@ -96,10 +99,10 @@ def plot_GA(mean_progression, std_progression, generations, data):
 	plt.savefig('GA_progression_mu_lambda.png', dpi = 300, bbox_inches = 'tight')
 	plt.show()
 
-# data = load_MC()
-# mean_progression, std_progression, x_data, __ = process_data(data)
-# plot_MC(mean_progression, std_progression, x_data)
+data = load_MC()
+mean_progression, std_progression, x_data, data = process_data(data)
+plot_MC(mean_progression, std_progression, x_data, data)
 
-data = load_GA()
-mean_progression, std_progression, generations, data = process_data(data)
-plot_GA(mean_progression, std_progression, generations, data)
+# data = load_GA()
+# mean_progression, std_progression, generations, data = process_data(data)
+# plot_GA(mean_progression, std_progression, generations, data)
