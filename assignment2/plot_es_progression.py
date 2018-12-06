@@ -30,7 +30,7 @@ def process_data(data):
 	print(f'Mean: {np.mean(best_results)}')
 	print(f'STD: {np.std(best_results)}')
 
-	return mean_progression, std_progression, x_data
+	return mean_progression, std_progression, x_data, np.mean(best_results), np.std(best_results)
 
 def makeplot(mean_progression, std_progression, generations, fopt_history, bbf, ES_type, plotloc = './Plots/'):
 	#make an array indicating the number of evaluations
@@ -133,17 +133,22 @@ def make_grid_plots(mean_progression, std_progression, generations, fopt_history
 	xlims = plt.xlim()
 
 	#plot the optimal values per run
+	#length of the lines of the optimal values
+	linelength = 5 * generations[-1] / 400
 	fopt = np.min(fopt_history, axis = 1)
 	for i in range(len(fopt)):
-		plt.plot([generations[-1]+1, generations[-1]+6], [fopt[i], fopt[i]], color = 'red', linewidth = 1)
+		plt.plot([generations[-1]+1, generations[-1]+1+linelength], [fopt[i], fopt[i]], color = 'red', linewidth = 1)
 	#plot also the mean of these optimal values
 	mean_fopt = np.mean(fopt)
-	plt.plot([generations[-1]+10, generations[-1]+15], [mean_fopt, mean_fopt], color = '#2934A3', linewidth = 2)
+	plt.plot([generations[-1]+linelength+4, generations[-1]+linelength*2+4], [mean_fopt, mean_fopt], color = '#2934A3', linewidth = 2)
 
 	#only add y label if we are plotting the first column
 	if ES_id == 0:
-		plt.ylabel(f'Function value, BBF {bbf_id}')
-	# plt.title(f'Progression of evolutionary algorithm for {bbf.upper()}')
+		plt.ylabel(f'Function value')
+		#add indication of BBF outside of plot
+		plt.text(-0.35, 0.3, f'BBF {bbf_id}', fontsize = 25, transform = ax1.transAxes)
+		plt.subplots_adjust(left = 0.06)
+
 	if bbf_id < 4:
 		plt.yscale('log')
 	#fix limits
@@ -164,6 +169,7 @@ def make_grid_plots(mean_progression, std_progression, generations, fopt_history
 			plt.title(f'({split_ES_type[0]}+{split_ES_type[ES_type_second_idx]})', fontsize = 25)
 		else:
 			plt.title(f'({split_ES_type[0]},{split_ES_type[ES_type_second_idx]})', fontsize = 25)
+		
 
 
 	##### plot the standard deviation in a separate plot
@@ -220,9 +226,17 @@ def make_grid_plots(mean_progression, std_progression, generations, fopt_history
 		ax3.set_xticklabels(np.linspace(0, 10000, 6, dtype = int))
 		ax3.set_xlabel('Number of evaluations', labelpad = 1)
 
+#which type of architecture to analyse the results of
+architecture = 'comma'
+
 #define the different data sets which we will use for the grid
-ES_types = ['3_21', '5_25', '5_35']
-# ES_types = ['3_21']
+if architecture == 'comma':
+	ES_types = ['3_21', '5_25', '5_35'] 
+elif architecture == 'plus':
+	ES_types = ['3_p_21', '5_p_35', '1_p_1'] 
+else:
+	raise ValueError('architecture not valid')
+
 bbfs = []
 for b in range(1,6):
 	bbfs.append(f'bbf{b}')
@@ -238,18 +252,26 @@ row_main_ylims = [
 		[100, 2e6],
 		[30, 3e9],
 		[40, 150],
-		[67, 69.5]
-		]
-row_error_ylims = [
+		[67, 69.5]]
+if architecture == 'comma':
+	row_error_ylims = [
 		[0, 6e4],
 		[0, 2.5e5],
 		[0, 3e8],
 		[0, 25],
-		[0, 0.8]
-		]
+		[0, 0.8]]
+elif architecture == 'plus':
+	row_error_ylims = [
+		[0, 2e4],
+		[0, 1.6e5],
+		[0, 3e8],
+		[0, 16],
+		[0, 0.6]]
 
 gs_counter = 0
-for bbf in bbfs:
+mean_array = np.zeros((len(bbfs), len(ES_types)))
+std_array = np.zeros((len(bbfs), len(ES_types)))
+for i, bbf in enumerate(bbfs):
 	for ES_id, ES_type in enumerate(ES_types):
 		print('')
 		print(bbf)
@@ -259,14 +281,26 @@ for bbf in bbfs:
 
 		#load and process data
 		fopt_history, xopts = load_single_bbf(bbf, ES_type)
-		mean_progression, std_progression, generations = process_data(fopt_history)
+		mean_progression, std_progression, generations, mean, std = process_data(fopt_history)
+
+		#add mean and std to arrays
+		mean_array[i][ES_id] = mean
+		std_array[i][ES_id] = std
 
 		make_grid_plots(mean_progression, std_progression, generations, fopt_history, bbf, ES_type, gs00, row_main_ylims, row_error_ylims, ES_id)
 
 		gs_counter += 1
 
-#give the extra x-axes at the bottom more space
-f.subplots_adjust(bottom=0.03)
+statistics_array = np.zeros((len(bbfs), len(ES_types)*2))
+for i in range(len(bbfs)):
+	for j in range(len(ES_types)):
+		statistics_array[i][j*2] = mean_array[i][j]
+		statistics_array[i][(j+1)*2-1] = std_array[i][j]
 
-plt.savefig(f'./Plots/ES_progression_comma.png', dpi = 200, bbox_inches = 'tight')
+np.savetxt(f'statistics_{architecture}.csv', statistics_array, delimiter = ',', fmt = '%.2f')
+
+#give the extra x-axes at the bottom more space
+f.subplots_adjust(bottom=0.03, )
+
+plt.savefig(f'./Plots/ES_progression_{architecture}.png', dpi = 200, bbox_inches = 'tight')
 plt.close()
