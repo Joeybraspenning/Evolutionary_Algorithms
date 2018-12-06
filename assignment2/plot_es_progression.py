@@ -110,6 +110,11 @@ def makeplot(mean_progression, std_progression, generations, fopt_history, bbf, 
 def make_grid_plots(mean_progression, std_progression, generations, fopt_history, bbf, ES_type, gs, row_main_ylims, row_error_ylims, ES_id):
 
 	bbf_id = int(bbf[3])
+	split_ES_type = ES_type.split('_')
+	if split_ES_type[1] == 'p':
+		ES_type_second_idx = 2
+	else:
+		ES_type_second_idx = 1
 
 	#make an array indicating the number of evaluations
 	evals = np.linspace(1, 10000, len(generations))
@@ -137,7 +142,7 @@ def make_grid_plots(mean_progression, std_progression, generations, fopt_history
 
 	#only add y label if we are plotting the first column
 	if ES_id == 0:
-		plt.ylabel('Function value')
+		plt.ylabel(f'Function value, BBF {bbf_id}')
 	# plt.title(f'Progression of evolutionary algorithm for {bbf.upper()}')
 	if bbf_id < 4:
 		plt.yscale('log')
@@ -152,6 +157,13 @@ def make_grid_plots(mean_progression, std_progression, generations, fopt_history
 	if ES_id > 0:
 		frame1.axes.yaxis.set_ticklabels([])
 	plt.grid(linestyle = '--')
+
+	#set title if at the top
+	if bbf_id == 1:
+		if ES_type_second_idx == 2:
+			plt.title(f'({split_ES_type[0]}+{split_ES_type[ES_type_second_idx]})', fontsize = 25)
+		else:
+			plt.title(f'({split_ES_type[0]},{split_ES_type[ES_type_second_idx]})', fontsize = 25)
 
 
 	##### plot the standard deviation in a separate plot
@@ -172,20 +184,24 @@ def make_grid_plots(mean_progression, std_progression, generations, fopt_history
 		yticks_string.append('{}'.format(fmt(ytick)))
 	plt.yticks(yticksloc, yticks_string)
 
-	split_ES_type = ES_type.split('_')
-
 	#disable x ticks but keep grid if needed
 	frame1 = plt.gca()
+	
+	#fix the location of the ticks for every plot
+	ax2.xaxis.set_ticks(np.linspace(0, 10000, 6)/float(split_ES_type[ES_type_second_idx]))
 	if bbf_id < 5:
-		frame1.axes.xaxis.set_ticklabels([])
+		ax2.xaxis.set_ticklabels([])
+		ax1.xaxis.set_ticklabels([])
 	else:
-		plt.xticks(np.linspace(0, 10000, 6)/(int(split_ES_type[0]) + int(split_ES_type[1])))
+		xticklabels = np.linspace(0, 10000, 6)//int(split_ES_type[ES_type_second_idx])
+		ax2.xaxis.set_ticklabels(xticklabels.astype(int))
+
 	#disable y ticks if needed
 	if ES_id > 0:
 		frame1.axes.yaxis.set_ticklabels([])
 	plt.grid(linestyle = '--')
-
 	plt.xlim(xlims)
+
 	if bbf_id == 5:
 		plt.xlabel('Number of generations', labelpad = 1)
 
@@ -196,8 +212,12 @@ def make_grid_plots(mean_progression, std_progression, generations, fopt_history
 		ax3.xaxis.set_ticks_position('bottom')
 		ax3.xaxis.set_label_position('bottom')
 		ax3.spines['bottom'].set_position(('outward', 36))
+
+		ax3.plot(generations, mean_progression, color = None)
+
 		ax3.set_xticks(np.linspace(0, generations[-1], 6))
-		ax3.set_xticklabels(np.linspace(0, 10000, 6))
+		# ax3.set_xticks([0, 100, 200])
+		ax3.set_xticklabels(np.linspace(0, 10000, 6, dtype = int))
 		ax3.set_xlabel('Number of evaluations', labelpad = 1)
 
 #define the different data sets which we will use for the grid
@@ -224,7 +244,7 @@ row_error_ylims = [
 		[0, 6e4],
 		[0, 2.5e5],
 		[0, 3e8],
-		[0, 250],
+		[0, 25],
 		[0, 0.8]
 		]
 
